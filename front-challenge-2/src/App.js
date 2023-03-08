@@ -107,8 +107,9 @@ const Component = ({
     fetch("https://jsonplaceholder.typicode.com/photos")
     .then((response) => response.json())
     .then((data) => {
+      console.log("dta",data)
       const randomIdx = Math.floor(Math.random() * data.length);
-      setPhoto(data[randomIdx].url);
+      setPhoto(data[randomIdx]);
     })
     .catch((error) => {
       console.log(error);
@@ -223,8 +224,8 @@ const Component = ({
       {index}
     </div>
     <Moveable
-      target={isSelected && ref.current}
-      draggable
+      target={ref}
+      draggable = {true}
       resizable
       throttleDrag={1}
       onDrag={(e) => {
