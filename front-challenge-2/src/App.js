@@ -24,7 +24,7 @@ const App = () => {
   };
 
   const updateMoveable = (id, newComponent, updateEnd = false) => {
-    const updatedMoveables = moveableComponents.map((moveable, i) => {
+    const updatedMoveables = moveableComponents.map((moveable) => {
       if (moveable.id === id) {
         return { id, ...newComponent, updateEnd };
       }
@@ -51,6 +51,10 @@ const App = () => {
       const initialWidth = e.width;
 
       // Set up the onResize event handler to update the left value based on the change in width
+      e.setOrigin(["%", "%"]).on("resize", ({ width }) => {
+        const newLeft = initialLeft + (initialWidth - width);
+        updateMoveable(e.target.id, { left: newLeft, width }, true);
+      });
     }
   };
 
@@ -96,7 +100,20 @@ const Component = ({
   isSelected = false,
   updateEnd,
 }) => {
-  const ref = useRef();
+  const[photo, setPhoto] = useState("");
+  const ref = useRef(); 
+
+  useEffect(() => {
+    fetch("https://jsonplaceholder.typicode.com/photos")
+    .then((response) => response.json())
+    .then((data) => {
+      const randomIdx = Math.floor(Math.random() * data.length);
+      setPhoto(data[randomIdx].url);
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+  }, []);
 
   const [nodoReferencia, setNodoReferencia] = useState({
     top,
@@ -130,6 +147,7 @@ const Component = ({
       width: newWidth,
       height: newHeight,
       color,
+      updateEnd,
     });
 
     // ACTUALIZAR NODO REFERENCIA
@@ -186,44 +204,47 @@ const Component = ({
 
   return (
     <>
-      <div
-        ref={ref}
-        className="draggable"
-        id={"component-" + id}
-        style={{
-          position: "absolute",
-          top: top,
-          left: left,
-          width: width,
-          height: height,
-          background: color,
-        }}
-        onClick={() => setSelected(id)}
-      />
-
-      <Moveable
-        target={isSelected && ref.current}
-        resizable
-        draggable
-        onDrag={(e) => {
-          updateMoveable(id, {
-            top: e.top,
-            left: e.left,
-            width,
-            height,
-            color,
-          });
-        }}
-        onResize={onResize}
-        onResizeEnd={onResizeEnd}
-        keepRatio={false}
-        throttleResize={1}
-        renderDirections={["nw", "n", "ne", "w", "e", "sw", "s", "se"]}
-        edge={false}
-        zoom={1}
-        origin={false}
-        padding={{ left: 0, top: 0, right: 0, bottom: 0 }}
-      />
-    </>
+    <div
+      ref={ref}
+      style={{
+        position: "absolute",
+        top: `${nodoReferencia.top}px`,
+        left: `${nodoReferencia.left}px`,
+        width: `${nodoReferencia.width}px`,
+        height: `${nodoReferencia.height}px`,
+        background: color,
+        border: isSelected ? "1px solid black" : "none",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+      onClick={() => setSelected(id)}
+    >
+      {index}
+    </div>
+    <Moveable
+      target={isSelected && ref.current}
+      draggable
+      resizable
+      throttleDrag={1}
+      onDrag={(e) => {
+        updateMoveable(id, {
+          top: e.top,
+          left: e.left,
+          width,
+          height,
+          color,
+        });
+      }}
+      onResize={onResize}
+      onResizeEnd={onResizeEnd}
+      keepRatio={false}
+    ><img
+    src={photo}
+    alt="component-img"
+    style={{ objectFit: "cover", maxWidth: "100%", maxHeight: "100%" }}
+  /></Moveable>
+  </>
   );
 };
+
